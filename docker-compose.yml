@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    image: exxtazy/pcshop_web:v1.0
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - postgres
+    networks:
+      - mynetwork
+    command: bash -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin')\" && python manage.py runserver 0.0.0.0:8000"
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: django_admin
+      POSTGRES_PASSWORD: django_admin
+      POSTGRES_DB: django_postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - mynetwork  
+
+volumes:
+  static_volume:
+  media_volume:
+  postgres_data:
+
+networks:
+  mynetwork:
